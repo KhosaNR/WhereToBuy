@@ -18,7 +18,8 @@ public partial class DatabaseContext : DbContext
     public DbSet<PromotionPrice> PromotionPrices { get; set; }
     public DbSet<StockList> StockLists { get; set; }
     //public DbSet<UserStockList> UserStockLists { get; set; }
-    public DbSet<StockListProduct> StoocklistProducts { get; set; }
+    public DbSet<StockListProduct> StockListProducts { get; set; }
+    public DbSet<UserStockList> UserStockLists { get; set; }
     public DbSet<User> Users { get; set; }
     public DbSet<Shop> Shops { get; set; }
     public DbSet<Location> Locations { get; set; }
@@ -73,12 +74,6 @@ public partial class DatabaseContext : DbContext
 
         modelBuilder.Entity<BaseAuditableEntity>()
             .HasQueryFilter(p => !p.IsDeleted);
-
-        modelBuilder.Entity<StockList>()
-            .HasOne(s => s.Creator)
-            .WithMany()
-            .HasForeignKey(s => s.CreatorId)
-            .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<StockList>()
             .HasOne(s => s.Creator)

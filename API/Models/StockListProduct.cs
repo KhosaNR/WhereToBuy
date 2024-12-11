@@ -8,5 +8,6 @@ namespace API.Models
         public uint Quantity { get; set; }
         public Product Product { get; set; }
         public Guid ProductId { get; set; }
+        public Guid StockListId { get; set; }
     }
 }

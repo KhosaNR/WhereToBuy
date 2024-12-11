@@ -9,5 +9,6 @@ namespace API.Models
         public StockList StockList { get; set; }
         public Guid StockListId { get; set; }
         public bool IsActive { get; set; }
+        public Guid AddedById { get; set; }
     }
 }
