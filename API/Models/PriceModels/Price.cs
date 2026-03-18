@@ -6,16 +6,26 @@ namespace API.Models.PriceModels
 {
     public class Price : BaseAuditableEntity
     {
-        [NotMapped]
-        public virtual bool IsActive { get; set; } = true;
-        public double Amount { get; set; }
+        public decimal Amount { get; set; }
         public string Url { get; set; }
-        public Product Product { get; set; }
         public Guid ProductId { get; set; }
-        public Shop Shop { get; set; }
+        public Product Product { get; set; }
         public Guid ShopId { get; set; }
-        public DateTime PriceDate { get; set; } = DateTime.Now;
-        public bool IsPack { get; set; } = false;
-        public uint? UnitsPerPack { get; set; }
+        public Shop Shop { get; set; }
+        public DateTime PriceDate { get; set; } = DateTime.UtcNow;
+
+        public List<PromotionPrice>? PromotionPrices { get; set; }
+
+        public List<PromotionPrice>? ActivePromotionPrices() => PromotionPrices?.Where(pp => pp.IsActive).ToList();
+
+        public PromotionPrice? GetBestActivePromotion()
+        {
+            var activePromos = ActivePromotionPrices();
+
+            if (activePromos == null || !activePromos.Any())
+                return null;
+
+            return activePromos.OrderBy(pp => pp.Amount).First();
+        }
     }
 }

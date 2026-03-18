@@ -93,7 +93,6 @@ namespace API.Services
 
             shop.IsDeleted = true;
             shop.DeletedDate = DateTime.UtcNow;
-            //shop.DeletedById = Guid.Parse("YourDeletedById"); // Replace with actual deleted by id
 
             db.Shops.Update(shop);
             await db.SaveChangesAsync();

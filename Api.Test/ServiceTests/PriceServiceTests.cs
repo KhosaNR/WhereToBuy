@@ -23,8 +23,8 @@ namespace ApiTest
                     Name = "Grams",
                     Abbreviation = "g"
                 },
-                Quantity = 300,
-                Variant = "Original"
+                QuantityPerUnit = 300,
+                Variants = "Original"
             };
 
             DefaultProduct = product;
@@ -39,8 +39,8 @@ namespace ApiTest
                     Name = "Litres",
                     Abbreviation = "l"
                 },
-                Quantity = 2,
-                Variant = "Zero"
+                QuantityPerUnit = 2,
+                Variants = "Zero"
             };
 
             DefaultProduct2 = product2;
@@ -70,7 +70,7 @@ namespace ApiTest
         {
             var price = new Price()
             {
-                Amount = 10.99,
+                Amount = 10.99M,
                 Url = "https://www.example.com",
                 ProductId = DefaultProduct.Id,
                 ShopId = DefaultShop.Id
@@ -78,7 +78,7 @@ namespace ApiTest
 
             await PriceService.AddPriceAsync(price);
 
-            var savedPrice = await PriceService.GetPriceAsync<Price>(price.Id);
+            var savedPrice = await PriceService.GetPriceAsync(price.Id);
 
             Assert.IsNotNull(savedPrice);
             Assert.AreEqual(price.Amount, savedPrice.Amount, "Amounts are the same.");
@@ -90,7 +90,7 @@ namespace ApiTest
         {
             var price1 = new Price()
             {
-                Amount = 10.99,
+                Amount = 10.99M,
                 Url = "https://www.example.com",
                 ProductId = DefaultProduct.Id,
                 ShopId = DefaultShop.Id
@@ -98,7 +98,7 @@ namespace ApiTest
 
             var price2 = new Price()
             {
-                Amount = 5.99,
+                Amount = 5.99M,
                 Url = "https://www.example2.com",
                 ProductId = DefaultProduct2.Id,
                 ShopId = DefaultShop.Id
@@ -107,7 +107,7 @@ namespace ApiTest
             await PriceService.AddPriceAsync(price1);
             await PriceService.AddPriceAsync(price2);
 
-            var savedPrices = await PriceService.GetPricesAsync<Price>();
+            var savedPrices = await PriceService.GetPricesAsync();
 
             Assert.IsNotNull(savedPrices);
             Assert.AreEqual(2, savedPrices.Count, "Two prices are returned.");
@@ -146,7 +146,7 @@ namespace ApiTest
         {
             var price1 = new Price()
             {
-                Amount = 10.99,
+                Amount = 10.99M,
                 Url = "https://www.example.com",
                 ProductId = DefaultProduct.Id,
                 ShopId = DefaultShop.Id
@@ -154,18 +154,16 @@ namespace ApiTest
 
             var price2 = new Price()
             {
-                Amount = 50.99,
+                Amount = 50.99M,
                 Url = "https://www.example2.com",
                 ProductId = DefaultProduct2.Id,
                 ShopId = DefaultShop.Id,
-                IsPack = true,
-                UnitsPerPack = 5
             };
 
             await PriceService.AddPriceAsync(price1);
             await PriceService.AddPriceAsync(price2);
 
-            var savedPrices = await PriceService.GetPricesByProductIdAsync<Price>(DefaultProduct2.Id);
+            var savedPrices = await PriceService.GetPricesByProductIdAsync(DefaultProduct2.Id);
 
             Assert.IsNotNull(savedPrices);
             Assert.AreEqual(1, savedPrices.Count, "One price is returned.");
@@ -176,7 +174,7 @@ namespace ApiTest
         {
             var price = new Price()
             {
-                Amount = 10.99,
+                Amount = 10.99M,
                 Url = "https://www.example.com",
                 ProductId = DefaultProduct.Id,
                 ShopId = DefaultShop.Id
@@ -194,68 +192,91 @@ namespace ApiTest
         [TestMethod]
         public async Task AddPriceAsync_NewValidPromotionPrice_PriceIsAdded()
         {
-            var promoPrice = new PromotionPrice()
+            var price = new Price()
             {
-                Amount = 10.99,
+                Amount = 15.99M,
                 Url = "https://www.example.com",
                 ProductId = DefaultProduct.Id,
-                ShopId = DefaultShop.Id,
-                StartDate = DateTime.UtcNow,
-                EndDate = DateTime.UtcNow.AddDays(1)
+                ShopId = DefaultShop.Id
             };
 
-            await PriceService.AddPriceAsync(promoPrice);
+            var promoPrice = new PromotionPrice()
+            {
+                Amount = 10.99M,
+                StartDate = DateTime.UtcNow,
+                EndDate = DateTime.UtcNow.AddDays(1),
+                Price = price
+            };
 
-            var svP = await PriceService.GetPricesAsync<Price>();
+            await PriceService.AddPromotionPriceAsync(promoPrice);
 
-            var savedPriceList = await PriceService.GetPricesAsync<PromotionPrice>();
+            var svP = await PriceService.GetPricesAsync();
+
+            var savedPriceList = await PriceService.GetPricesAsync();
             Assert.IsNotNull(savedPriceList, "Prices are not null.");
             var savedPrice = savedPriceList.FirstOrDefault();
 
             Assert.IsNotNull(savedPrice);
-            Assert.AreEqual(promoPrice.Amount, savedPrice.Amount, "Amounts are the same.");
-            Assert.AreEqual(true, savedPrice.IsPromotion, "Price is promotion");
-            Assert.AreEqual(promoPrice.Url, savedPrice.Url, "Urls are the same.");
+            Assert.IsNotNull(promoPrice);
+            Assert.IsNotNull(savedPrice.PromotionPrices);
+            Assert.AreEqual(promoPrice.Price.Amount, savedPrice.Amount, "Amounts are the same.");
+            Assert.AreEqual(promoPrice.Amount, savedPrice.PromotionPrices.FirstOrDefault().Amount, "Promotion amounts are the same.");
+            Assert.AreEqual(true, promoPrice.IsActive, "Promo price is active");
+            Assert.AreEqual(promoPrice.Price.Url, savedPrice.Url, "Urls are the same.");
         }
 
 
         [TestMethod]
         public async Task AddPriceAsync_InvalidPromotionPriceEndDate_ThrowException()
         {
-            var promoPrice = new PromotionPrice()
+            var price = new Price()
             {
-                Amount = 10.99,
+                Amount = 15.99M,
                 Url = "https://www.example.com",
                 ProductId = DefaultProduct.Id,
-                ShopId = DefaultShop.Id,
-                StartDate = DateTime.UtcNow,
-                EndDate = DateTime.UtcNow.AddDays(-1)
+                ShopId = DefaultShop.Id
             };
 
-            await Assert.ThrowsExceptionAsync<Exception>(async () => await PriceService.AddPriceAsync(promoPrice), "Invalid promotion price end date. Promotion price cannot be less than now.");
+            var promoPrice = new PromotionPrice()
+            {
+                Amount = 10.99M,
+                StartDate = DateTime.UtcNow,
+                EndDate = DateTime.UtcNow.AddDays(-1),
+                Price = price
+            };
+
+            await Assert.ThrowsExceptionAsync<Exception>(async () => await PriceService.AddPromotionPriceAsync(promoPrice), "Invalid promotion price end date. Promotion price cannot be less than now.");
         }
 
         [TestMethod]
         public async Task GetPriceAsync_ExpiredPromotionPrice_PromotionIsNotActive()
         {
-            var promoPrice = new PromotionPrice()
+            var price = new Price()
             {
-                Amount = 10.99,
+                Amount = 15.99M,
                 Url = "https://www.example.com",
                 ProductId = DefaultProduct.Id,
-                ShopId = DefaultShop.Id,
-                StartDate = DateTime.UtcNow,
-                EndDate = DateTime.UtcNow.AddDays(1)
+                ShopId = DefaultShop.Id
             };
-            await PriceService.AddPriceAsync(promoPrice);
+
+            var promoPrice = new PromotionPrice()
+            {
+                Amount = 10.99M,
+                StartDate = DateTime.UtcNow,
+                EndDate = DateTime.UtcNow.AddDays(1),
+                Price= price
+            };
+            await PriceService.AddPromotionPriceAsync(promoPrice);
             promoPrice.EndDate = DateTime.UtcNow.AddDays(-1);
             await db.SaveChangesAsync();
 
-            var savedPriceList = await PriceService.GetPricesAsync<PromotionPrice>(isActive: true);
-            Assert.IsNotNull(savedPriceList, "Prices are not null.");
-            var savedPrice = savedPriceList.FirstOrDefault();
+            db.ChangeTracker.Clear();
 
-            Assert.IsNull(savedPrice,"Promotion price is null");
+            var savedPriceList = await PriceService.GetPricesAsync(activePromotionsOnly: true);
+            Assert.IsNotNull(savedPriceList, "Prices are not null.");
+            var savedPromoPrice = savedPriceList.FirstOrDefault().PromotionPrices;
+
+            Assert.AreEqual(0,savedPromoPrice.Count,"Promotion price is null");
         }
 
         [TestMethod]
@@ -276,7 +297,7 @@ namespace ApiTest
         {
             var priceId = Guid.NewGuid();
 
-            var savedPrice = await PriceService.GetPriceAsync<Price>(priceId);
+            var savedPrice = await PriceService.GetPriceAsync(priceId);
 
             Assert.IsNull(savedPrice);
         }
@@ -286,7 +307,7 @@ namespace ApiTest
         {
             var shopId = Guid.NewGuid();
 
-            var savedPrices = await PriceService.GetPricesByShopIdAsync<Price>(shopId);
+            var savedPrices = await PriceService.GetPricesByShopIdAsync(shopId);
 
             Assert.IsNotNull(savedPrices);
             Assert.AreEqual(0, savedPrices.Count, "No prices are returned.");
@@ -297,7 +318,7 @@ namespace ApiTest
         {
             var productId = Guid.NewGuid();
 
-            var savedPrices = await PriceService.GetPricesByProductIdAsync<Price>(productId);
+            var savedPrices = await PriceService.GetPricesByProductIdAsync(productId);
 
             Assert.IsNotNull(savedPrices);
             Assert.AreEqual(0, savedPrices.Count, "No prices are returned.");
@@ -306,14 +327,24 @@ namespace ApiTest
         [TestMethod]
         public async Task AddPriceAsync_PriceWithInvalidUnitsPerPack_ThrowsException()
         {
+            var product = new Product()
+            {
+                Name = "Test Product",
+                Description = "Test Product Description",
+                UnitOfMeasure = new()
+                {
+                    Name = "Pieces",
+                    Abbreviation = "pcs"
+                },
+                QuantityPerUnit = 2,
+                Variants = "Test Variant"
+            };
             var price = new Price()
             {
-                Amount = 10.99,
+                Amount = 10.99M,
                 Url = "https://www.example.com",
-                ProductId = Guid.NewGuid(),
+                Product = product,
                 ShopId = Guid.NewGuid(),
-                IsPack = false,
-                UnitsPerPack = 2
             };
 
             await Assert.ThrowsExceptionAsync<Exception>(async () => await PriceService.AddPriceAsync(price), "Cannot set units per pack if price is not for pack.");
@@ -322,14 +353,24 @@ namespace ApiTest
         [TestMethod]
         public async Task AddPriceAsync_PriceWithInvalidPackUnitsPerPack_ThrowsException()
         {
+            var product = new Product()
+            {
+                Name = "Test Product",
+                Description = "Test Product Description",
+                UnitOfMeasure = new()
+                {
+                    Name = "Pieces",
+                    Abbreviation = "pcs"
+                },
+                QuantityPerUnit = 2,
+                Variants = "Test Variant"
+            };
             var price = new Price()
             {
-                Amount = 10.99,
+                Amount = 10.99M,
                 Url = "https://www.example.com",
-                ProductId = Guid.NewGuid(),
                 ShopId = Guid.NewGuid(),
-                IsPack = true,
-                UnitsPerPack = 1
+                Product = product,
             };
 
             await Assert.ThrowsExceptionAsync<Exception>(async () => await PriceService.AddPriceAsync(price), "Units per pack should be more than 1 is price per pack.");
@@ -340,7 +381,7 @@ namespace ApiTest
         {
             var price = new Price()
             {
-                Amount = 10.99,
+                Amount = 10.99M,
                 Url = "https://www.example.com",
                 ProductId = DefaultProduct.Id,
                 ShopId = DefaultShop.Id
@@ -348,7 +389,7 @@ namespace ApiTest
 
             await PriceService.AddPriceAsync(price);
 
-            price.Amount = 12.99;
+            price.Amount = 12.99M;
 
             await PriceService.UpdatePriceAsync(price);
 
@@ -363,7 +404,7 @@ namespace ApiTest
         {
             var price = new Price()
             {
-                Amount = 10.99,
+                Amount = 10.99M,
                 Url = "https://www.example.com",
                 ProductId = DefaultProduct.Id,
                 ShopId = DefaultShop.Id
@@ -381,7 +422,7 @@ namespace ApiTest
         {
             var price = new Price()
             {
-                Amount = 10.99,
+                Amount = 10.99M,
                 Url = "https://www.example.com",
                 ProductId = DefaultProduct.Id,
                 ShopId = DefaultShop.Id
@@ -389,7 +430,7 @@ namespace ApiTest
 
             await PriceService.AddPriceAsync(price);
 
-            await PriceService.DeletePriceAsync<Price>(price.Id);
+            await PriceService.DeletePriceAsync(price.Id);
 
             var savedPrice = db.Prices.FirstOrDefault();
 
@@ -401,7 +442,7 @@ namespace ApiTest
         {
             var priceId = Guid.NewGuid();
 
-            await Assert.ThrowsExceptionAsync<Exception>(async () => await PriceService.DeletePriceAsync<Price>(priceId), "Price not found.");
+            await Assert.ThrowsExceptionAsync<Exception>(async () => await PriceService.DeletePriceAsync(priceId), "Price not found.");
         }
 
         [TestMethod]
@@ -409,22 +450,20 @@ namespace ApiTest
         {
             var price = new Price()
             {
-                Amount = 10.99,
+                Amount = 10.99M,
                 Url = "https://www.example.com",
                 ProductId = DefaultProduct.Id,
                 ShopId = DefaultShop.Id,
-                IsPack = true
             };
 
             await PriceService.AddPriceAsync(price);
 
             var duplicatePrice = new Price()
             {
-                Amount = 12.99,
+                Amount = 12.99M,
                 Url = "https://www.example2.com",
                 ProductId = DefaultProduct.Id,
                 ShopId = DefaultShop.Id,
-                IsPack = price.IsPack
             };
 
             await Assert.ThrowsExceptionAsync<Exception>(async () => await PriceService.AddPriceAsync(duplicatePrice), "Price already exists for the product and shop.");

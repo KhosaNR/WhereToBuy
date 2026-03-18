@@ -12,13 +12,20 @@ using System.Threading.Tasks;
 namespace ApiTest
 {
     [TestClass]
-    public abstract class BaseTestClass
+    public abstract class BaseTestClass: IDisposable
     {
         protected DatabaseContext db => Services.GetService<DatabaseContext>();
         protected ServiceProvider Services { get; private set; }
         protected IProductService ProductService => Services.GetService<IProductService>();
         protected IShopService ShopService => Services.GetService<IShopService>();
         protected IPriceService PriceService => Services.GetService<IPriceService>();
+        protected IStockListService StockListService => Services.GetService<IStockListService>();
+
+        
+        public BaseTestClass()
+        {
+            TestInitialize();
+        }
 
         [TestInitialize]
         public void TestInitialize()
@@ -36,11 +43,14 @@ namespace ApiTest
             serviceCollection.AddTransient<IProductSearchService, ProductSearchService>();
             serviceCollection.AddTransient<IPricingService, PricingService>();
             serviceCollection.AddTransient<IShopService, ShopService>();
+            serviceCollection.AddTransient<IStockListService, StockListService>();
             serviceCollection.AddSingleton<DatabaseContext>(provider =>
             {
                 var options = new DbContextOptionsBuilder<DatabaseContext>()
                     .UseInMemoryDatabase(databaseName: "TestDatabase")
+                    .ConfigureWarnings(warnings => warnings.Throw())
                     .Options;
+
                 return new DatabaseContext(options);
             });
             Services = serviceCollection.BuildServiceProvider(); ;
@@ -54,6 +64,11 @@ namespace ApiTest
             {
                 disposable.Dispose();
             }
+        }
+
+        public void Dispose()
+        {
+            // Cleanup();
         }
 
     }

@@ -40,8 +40,8 @@ public class ProductSearchService : IProductSearchService
                     (p.Name.Contains(k, StringComparison.InvariantCultureIgnoreCase) ? 1 : 0) +
                     (p.Description.Contains(k, StringComparison.InvariantCultureIgnoreCase) ? 1 : 0) +
                     (p.UnitOfMeasure.Name.Contains(k, StringComparison.InvariantCultureIgnoreCase) ? 1 : 0) +
-                    (p.Quantity.ToString().Contains(k, StringComparison.InvariantCultureIgnoreCase) ? 1 : 0) +
-                    (p.Variant.Contains(k, StringComparison.InvariantCultureIgnoreCase) ? 1 : 0))
+                    (p.QuantityPerUnit.ToString().Contains(k, StringComparison.InvariantCultureIgnoreCase) ? 1 : 0) +
+                    (p.Variants.Contains(k, StringComparison.InvariantCultureIgnoreCase) ? 1 : 0))
             })
             .OrderByDescending(x => x.Rank)
             .Select(x => x.Product)
@@ -60,8 +60,8 @@ public class ProductSearchService : IProductSearchService
             predicate = predicate.Or(p => p.Name.Contains(temp, StringComparison.InvariantCultureIgnoreCase) ||
                                           p.Description.Contains(temp, StringComparison.InvariantCultureIgnoreCase) ||
                                           p.UnitOfMeasure.Name.Contains(temp, StringComparison.InvariantCultureIgnoreCase) ||
-                                          p.Quantity.ToString().Contains(temp, StringComparison.InvariantCultureIgnoreCase) ||
-                                          p.Variant.Contains(temp, StringComparison.InvariantCultureIgnoreCase));
+                                          p.QuantityPerUnit.ToString().Contains(temp, StringComparison.InvariantCultureIgnoreCase) ||
+                                          p.Variants.Contains(temp, StringComparison.InvariantCultureIgnoreCase));
         }
 
         return predicate;

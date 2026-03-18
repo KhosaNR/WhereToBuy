@@ -22,6 +22,7 @@ builder.Services.AddTransient<IPriceService, PriceService>();
 builder.Services.AddTransient<IProductSearchService, ProductSearchService>();
 builder.Services.AddTransient<IPricingService, PricingService>();
 builder.Services.AddTransient<IShopService, ShopService>();
+builder.Services.AddTransient<IStockListService, StockListService>();
 
 var app = builder.Build();
 
@@ -30,6 +31,16 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+
+    using (var scope = app.Services.CreateScope())
+    {
+        var services = scope.ServiceProvider;
+        var context = services.GetRequiredService<DatabaseContext>();
+        if (context.Database.GetPendingMigrations().Any())
+        {
+            context.Database.Migrate();
+        }
+    }
 }
 
 app.UseHttpsRedirection();

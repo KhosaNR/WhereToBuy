@@ -1,17 +1,23 @@
 ﻿using API.Models.PriceModels;
 using API.Models;
 using Microsoft.EntityFrameworkCore;
-using AutoMapper;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 public interface IPriceService
 {
-    Task<T?> GetPriceAsync<T>(Guid id) where T: Price;
-    Task<List<T>?> GetPricesAsync<T>(bool? isActive = null) where T: Price;
-    Task<List<T>?> GetPricesByShopIdAsync<T>(Guid shopId) where T: Price;
-    Task<List<T>?> GetPricesByProductIdAsync<T>(Guid productId) where T: Price;
-    Task<T> AddPriceAsync<T>(T price) where T : Price;
-    Task<bool> UpdatePriceAsync<T>(T price) where T: Price;
-    Task<bool> DeletePriceAsync<T>(Guid priceId) where T: Price;
+    Task<Price?> GetPriceAsync(Guid id);
+    Task<List<Price>> GetPricesAsync(bool activePromotionsOnly = false);
+    Task<List<Price>> GetPricesByShopIdAsync(Guid shopId);
+    Task<List<Price>> GetPricesByProductIdAsync(Guid productId);
+    Task<Price> AddPriceAsync(Price price);
+    Task<bool> UpdatePriceAsync(Price price);
+    Task<bool> DeletePriceAsync(Guid priceId);
+
+    Task<PromotionPrice> AddPromotionPriceAsync(PromotionPrice promotionPrice);
+    Task<bool> DeletePromotionPriceAsync(Guid promotionPriceId);
 }
 
 public class PriceService : IPriceService
@@ -23,101 +29,70 @@ public class PriceService : IPriceService
         db = context;
     }
 
-    public async Task<T?> GetPriceAsync<T>(Guid id) where T: Price
+    public async Task<Price?> GetPriceAsync(Guid id)
     {
-        return await db.Prices.FindAsync(id) as T;
+        return await db.Prices
+            .Include(p => p.PromotionPrices)
+            .FirstOrDefaultAsync(p => p.Id == id);
     }
 
-    public async Task<List<T>?> GetPricesAsync<T>(bool? isActive = null) where T : Price
+    public async Task<List<Price>> GetPricesAsync(bool activePromotionsOnly = false)
     {
-        var query = db.Prices.OfType<T>().AsQueryable();
+        var query = db.Prices.AsQueryable();
 
-        if (isActive.HasValue)
+        if (activePromotionsOnly)
         {
-            if (isActive.Value && typeof(T) == typeof(PromotionPrice))
-            {
-                query = query.Where(pp => (pp as PromotionPrice).EndDate >= DateTime.UtcNow);
-            }
-            else if (!isActive.Value && typeof(T) == typeof(PromotionPrice))
-            {
-                query = query.Where(pp => (pp as PromotionPrice).EndDate < DateTime.UtcNow);
-            }
+            var now = DateTime.UtcNow;
+            query = query.Include(p => p.PromotionPrices!
+                         .Where(pp => pp.StartDate <= now && pp.EndDate >= now));
+        }
+        else
+        {
+            query = query.Include(p => p.PromotionPrices);
         }
 
         return await query.ToListAsync();
     }
 
-    public async Task<List<T>?> GetPricesByShopIdAsync<T>(Guid shopId) where T: Price
+    public async Task<List<Price>> GetPricesByShopIdAsync(Guid shopId)
     {
         return await db.Prices
-                        .Include(p => p.Shop)
-                        .Where(p => p.ShopId == shopId)
-                        .ToListAsync() as List<T>;
+            .Include(p => p.Shop)
+            .Include(p => p.PromotionPrices)
+            .Where(p => p.ShopId == shopId)
+            .ToListAsync();
     }
 
-    public async Task<List<T>?> GetPricesByProductIdAsync<T>(Guid productId) where T: Price
+    public async Task<List<Price>> GetPricesByProductIdAsync(Guid productId)
     {
         return await db.Prices
-                        .Include(p => p.Product)
-                        .Where(p => p.ProductId == productId)
-                        .ToListAsync() as List<T>;
+            .Include(p => p.Product)
+            .Include(p => p.PromotionPrices)
+            .Where(p => p.ProductId == productId)
+            .ToListAsync();
     }
 
-    public async Task<T> AddPriceAsync<T>(T price) where T : Price
+    public async Task<Price> AddPriceAsync(Price price)
     {
-        ValidatePrice(price);
+        ValidateAmount(price.Amount);
 
-        if (price.ProductId != Guid.Empty)
+        if (price.ProductId != Guid.Empty && !await db.Products.AnyAsync(p => p.Id == price.ProductId))
         {
-            var product = await db.Products.FindAsync(price.ProductId);
-            if (product == null)
-            {
-                throw new Exception("Product not found.");
-            }
+            throw new Exception("Product not found.");
         }
 
-        if (price.ShopId != Guid.Empty)
+        if (price.ShopId != Guid.Empty && !await db.Shops.AnyAsync(s => s.Id == price.ShopId))
         {
-            var shop = await db.Shops.FindAsync(price.ShopId);
-            if (shop == null)
-            {
-                throw new Exception("Shop not found.");
-            }
+            throw new Exception("Shop not found.");
         }
 
-        Price? existingPrice;
-
-        if (price is PromotionPrice promotionPrice)
-        {
-            if (promotionPrice.EndDate <= DateTime.UtcNow)
-            {
-                throw new Exception("Invalid promotion price end date. Promotion price cannot be less than now.");
-            }
-
-            existingPrice = await db.Prices.OfType<PromotionPrice>().FirstOrDefaultAsync(p =>
-                p.ProductId == promotionPrice.ProductId &&
-                p.ShopId == promotionPrice.ShopId &&
-                p.IsPack == promotionPrice.IsPack &&
-                p.IsPromotion == true &&
-                p.IsBulk == promotionPrice.IsBulk);
-
-        }
-        else
-        {
-            existingPrice = await db.Prices.FirstOrDefaultAsync(p =>
-                p.ProductId == price.ProductId &&
-                p.ShopId == price.ShopId &&
-                p.IsPack == price.IsPack);
-        }
+        var existingPrice = await db.Prices.FirstOrDefaultAsync(p =>
+            p.ProductId == price.ProductId &&
+            p.ShopId == price.ShopId);
 
         if (existingPrice != null)
         {
-            throw new Exception("Price already exists for the product and shop.");
-        }
-
-        if (existingPrice != null)
-        {
-            throw new Exception("Price already exists for the product and shop.");
+            throw new Exception("A base price already exists for this product at this shop.");
         }
 
         await db.Prices.AddAsync(price);
@@ -126,33 +101,15 @@ public class PriceService : IPriceService
         return price;
     }
 
-    public async Task<bool> UpdatePriceAsync<T>(T price) where T: Price
+    public async Task<bool> UpdatePriceAsync(Price price)
     {
-        ValidatePrice(price);
+        ValidateAmount(price.Amount);
 
-        var existingPrice = await GetPriceAsync<T>(price.Id) ;
+        var existingPrice = await db.Prices.FindAsync(price.Id);
 
         if (existingPrice == null)
         {
             throw new Exception("Price not found.");
-        }
-
-        if (price.ProductId != Guid.Empty)
-        {
-            var product = await db.Products.FindAsync(price.ProductId);
-            if (product == null)
-            {
-                throw new Exception("Product not found.");
-            }
-        }
-
-        if (price.ShopId != Guid.Empty)
-        {
-            var shop = await db.Shops.FindAsync(price.ShopId);
-            if (shop == null)
-            {
-                throw new Exception("Shop not found.");
-            }
         }
 
         existingPrice.Amount = price.Amount;
@@ -160,8 +117,6 @@ public class PriceService : IPriceService
         existingPrice.ProductId = price.ProductId;
         existingPrice.ShopId = price.ShopId;
         existingPrice.PriceDate = price.PriceDate;
-        existingPrice.IsPack = price.IsPack;
-        existingPrice.UnitsPerPack = price.UnitsPerPack;
 
         db.Prices.Update(existingPrice);
         await db.SaveChangesAsync();
@@ -169,9 +124,9 @@ public class PriceService : IPriceService
         return true;
     }
 
-    public async Task<bool> DeletePriceAsync<T>(Guid priceId) where T: Price
+    public async Task<bool> DeletePriceAsync(Guid priceId)
     {
-        var price = await GetPriceAsync<T>(priceId);
+        var price = await db.Prices.FindAsync(priceId);
 
         if (price == null)
         {
@@ -187,21 +142,53 @@ public class PriceService : IPriceService
         return true;
     }
 
-    private void ValidatePrice<T>(T price) where T: Price
+    public async Task<PromotionPrice> AddPromotionPriceAsync(PromotionPrice promotionPrice)
     {
-        if (price.Amount <= 0)
+        ValidateAmount(promotionPrice.Amount);
+
+        if (promotionPrice.EndDate <= DateTime.UtcNow)
+        {
+            throw new Exception("Promotion end date must be in the future.");
+        }
+
+        if (promotionPrice.StartDate >= promotionPrice.EndDate)
+        {
+            throw new Exception("Promotion start date must be before the end date.");
+        }
+
+        var basePriceExists = await db.Prices.AnyAsync(p => p.Id == promotionPrice.PriceId);
+        if (!basePriceExists && promotionPrice.Price == null)
+        {
+            throw new Exception("Base price not found. Cannot attach promotion.");
+        }
+
+        await db.Set<PromotionPrice>().AddAsync(promotionPrice);
+        await db.SaveChangesAsync();
+
+        return promotionPrice;
+    }
+
+    public async Task<bool> DeletePromotionPriceAsync(Guid promotionPriceId)
+    {
+        var promo = await db.Set<PromotionPrice>().FindAsync(promotionPriceId);
+
+        if (promo == null)
+            throw new Exception("Promotion not found.");
+
+        promo.IsDeleted = true;
+        promo.DeletedDate = DateTime.UtcNow;
+
+        db.Set<PromotionPrice>().Update(promo);
+        await db.SaveChangesAsync();
+
+        return true;
+    }
+
+    private void ValidateAmount(decimal amount)
+    {
+        if (amount <= 0)
         {
             throw new Exception("Amount should be greater than 0.");
-        }
-
-        if (price.IsPack && price.UnitsPerPack <= 1)
-        {
-            throw new Exception("Units per pack should be more than 1 is price per pack.");
-        }
-
-        if (!price.IsPack && (price.UnitsPerPack >= 1 || price.UnitsPerPack<= 0))
-        {
-            throw new Exception("Cannot set units per pack if price is not for pack.");
         }
     }
 }

@@ -2,9 +2,9 @@
 
 namespace API.Models
 {
-    public abstract class User : BaseAuditableEntity
+    public class User : BaseAuditableEntity
     {
-        public String Username { get; set; }
-        public List<StockList> StockLists { get; set; }
+        public String? Username { get; set; }
+        public List<UserStockList> StockLists { get; set; }
     }
 }

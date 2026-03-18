@@ -39,7 +39,7 @@ namespace API.Services
                 }
             }
 
-            var productExistByNameAndVariant = db.Products.Any(p => p.Name == product.Name && p.Variant == product.Variant);
+            var productExistByNameAndVariant = db.Products.Any(p => p.Name == product.Name && p.Variants == product.Variants);
             if (productExistByNameAndVariant)
             {
                 throw new Exception("A variant of this product already exist.");
@@ -87,7 +87,7 @@ namespace API.Services
                 throw new ArgumentException("Product name cannot be empty.");
             }
 
-            if (product.Quantity < 0)
+            if (product.QuantityPerUnit < 0)
             {
                 throw new ArgumentException("Product quantity cannot be negative.");
             }

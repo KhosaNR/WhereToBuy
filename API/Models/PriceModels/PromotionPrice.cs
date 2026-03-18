@@ -1,21 +1,22 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using API.Models.BaseClasses;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace API.Models.PriceModels
 {
-    public class PromotionPrice : Price
+    public class PromotionPrice : BaseAuditableEntity
     {
-        public PromotionPrice()
-        {
-            IsPromotion = true;
-        }
-
-        public DateTime StartDate { get; set; }
+        public DateTime StartDate { get; set; } = DateTime.UtcNow;
         public DateTime EndDate { get; set; }
 
         [NotMapped]
-        public override bool IsActive => DateTime.UtcNow <= EndDate;
-        public bool IsBulk { get; set; }
-        public uint? PerBulk { get; set; }
-        public bool IsPromotion { get; private set; }
+        public bool IsActive => DateTime.UtcNow >= StartDate && DateTime.UtcNow <= EndDate;
+        public decimal Amount { get; set; }
+        public uint? Quantity { get; set; }
+
+        [Required]
+        public Guid PriceId { get; set; }
+
+        public Price Price { get; set; }
     }
 }
