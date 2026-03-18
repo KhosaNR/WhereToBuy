@@ -399,7 +399,7 @@ namespace API.Migrations
                         column: x => x.UnitOfMeasureId,
                         principalTable: "MeasurementUnit",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.NoAction);
                 });
 
             migrationBuilder.CreateTable(
@@ -416,7 +416,7 @@ namespace API.Migrations
                         column: x => x.Id,
                         principalTable: "User",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.NoAction);
                 });
 
             migrationBuilder.CreateTable(
@@ -459,7 +459,7 @@ namespace API.Migrations
                         column: x => x.Id,
                         principalTable: "User",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.NoAction);
                 });
 
             migrationBuilder.CreateTable(
@@ -524,7 +524,7 @@ namespace API.Migrations
                         column: x => x.StockListId,
                         principalTable: "StockList",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.NoAction);
                 });
 
             migrationBuilder.CreateTable(
@@ -553,7 +553,7 @@ namespace API.Migrations
                         column: x => x.PriceId,
                         principalTable: "Price",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.NoAction);
                 });
 
             migrationBuilder.CreateIndex(
@@ -1038,7 +1038,7 @@ namespace API.Migrations
                 column: "StockListId",
                 principalTable: "BaseAuditableEntity",
                 principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
+                onDelete: ReferentialAction.NoAction);
 
             migrationBuilder.AddForeignKey(
                 name: "FK_BaseAuditableEntity_BaseAuditableEntity_StockListProduct_ProductId",
@@ -1053,7 +1053,7 @@ namespace API.Migrations
                 column: "UnitOfMeasureId",
                 principalTable: "BaseAuditableEntity",
                 principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
+                onDelete: ReferentialAction.NoAction);
 
             migrationBuilder.AddForeignKey(
                 name: "FK_BaseAuditableEntity_BaseAuditableEntity_UserId",

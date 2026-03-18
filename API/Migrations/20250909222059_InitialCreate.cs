@@ -89,7 +89,7 @@ namespace API.Migrations
                         column: x => x.StockListId,
                         principalTable: "BaseAuditableEntity",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.NoAction);
                     table.ForeignKey(
                         name: "FK_BaseAuditableEntity_BaseAuditableEntity_StockListProduct_ProductId",
                         column: x => x.StockListProduct_ProductId,
@@ -100,7 +100,7 @@ namespace API.Migrations
                         column: x => x.UnitOfMeasureId,
                         principalTable: "BaseAuditableEntity",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.NoAction);
                     table.ForeignKey(
                         name: "FK_BaseAuditableEntity_BaseAuditableEntity_UserId",
                         column: x => x.UserId,

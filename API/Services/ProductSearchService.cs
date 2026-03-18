@@ -3,7 +3,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using LinqKit; // Ensure you have LinqKit installed via NuGet
+using LinqKit;
+using Microsoft.Extensions.Logging;
 
 public interface IProductSearchService
 {
@@ -13,24 +14,29 @@ public interface IProductSearchService
 public class ProductSearchService : IProductSearchService
 {
     private readonly DatabaseContext db;
+    private readonly ILogger<ProductSearchService> logger;
 
-    public ProductSearchService(DatabaseContext context)
+    public ProductSearchService(DatabaseContext context, ILogger<ProductSearchService> logger)
     {
         db = context;
+        this.logger = logger;
     }
 
     public async Task<List<Product>> SearchProductsAsync(string searchString)
     {
+        logger.LogInformation("Searching products with keyword(s): {SearchString}", searchString);
+
         if (searchString.Trim() == string.Empty)
         {
+            logger.LogInformation("Search string is empty. Returning all products.");
             return db.Products.ToList();
         }
         var keywords = searchString.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
         var predicate = BuildPredicate(keywords);
 
-        var products =  db.Set<Product>()
+        var products = db.Set<Product>()
             .Where(predicate)
-            .ToList();// Fetch data from the database first
+            .ToList();
 
         var query = products
             .Select(p => new
@@ -46,6 +52,8 @@ public class ProductSearchService : IProductSearchService
             .OrderByDescending(x => x.Rank)
             .Select(x => x.Product)
             .ToList();
+
+        logger.LogInformation("Search completed. Found {ProductCount} matching products.", query.Count);
 
         return query;
     }

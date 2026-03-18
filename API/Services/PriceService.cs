@@ -1,6 +1,7 @@
 ﻿using API.Models.PriceModels;
 using API.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,22 +24,29 @@ public interface IPriceService
 public class PriceService : IPriceService
 {
     private readonly DatabaseContext db;
+    private readonly ILogger<PriceService> logger;
 
-    public PriceService(DatabaseContext context)
+    public PriceService(DatabaseContext context, ILogger<PriceService> logger)
     {
         db = context;
+        this.logger = logger;
     }
 
     public async Task<Price?> GetPriceAsync(Guid id)
     {
+        logger.LogInformation("Fetching price for ID: {PriceId}", id);
+
         return await db.Prices
+            .AsNoTracking()
             .Include(p => p.PromotionPrices)
             .FirstOrDefaultAsync(p => p.Id == id);
     }
 
     public async Task<List<Price>> GetPricesAsync(bool activePromotionsOnly = false)
     {
-        var query = db.Prices.AsQueryable();
+        logger.LogInformation("Fetching all prices. ActivePromotionsOnly: {ActivePromotionsOnly}", activePromotionsOnly);
+
+        var query = db.Prices.AsNoTracking().AsQueryable();
 
         if (activePromotionsOnly)
         {
@@ -56,7 +64,9 @@ public class PriceService : IPriceService
 
     public async Task<List<Price>> GetPricesByShopIdAsync(Guid shopId)
     {
-        return await db.Prices
+        logger.LogInformation("Fetching prices for Shop ID: {ShopId}", shopId);
+
+        return await db.Prices.AsNoTracking()
             .Include(p => p.Shop)
             .Include(p => p.PromotionPrices)
             .Where(p => p.ShopId == shopId)
@@ -65,7 +75,9 @@ public class PriceService : IPriceService
 
     public async Task<List<Price>> GetPricesByProductIdAsync(Guid productId)
     {
-        return await db.Prices
+        logger.LogInformation("Fetching prices for Product ID: {ProductId}", productId);
+
+        return await db.Prices.AsNoTracking()
             .Include(p => p.Product)
             .Include(p => p.PromotionPrices)
             .Where(p => p.ProductId == productId)
@@ -78,11 +90,13 @@ public class PriceService : IPriceService
 
         if (price.ProductId != Guid.Empty && !await db.Products.AnyAsync(p => p.Id == price.ProductId))
         {
+            logger.LogWarning("AddPriceAsync failed: Product {ProductId} not found.", price.ProductId);
             throw new Exception("Product not found.");
         }
 
         if (price.ShopId != Guid.Empty && !await db.Shops.AnyAsync(s => s.Id == price.ShopId))
         {
+            logger.LogWarning("AddPriceAsync failed: Shop {ShopId} not found.", price.ShopId);
             throw new Exception("Shop not found.");
         }
 
@@ -92,11 +106,14 @@ public class PriceService : IPriceService
 
         if (existingPrice != null)
         {
+            logger.LogWarning("AddPriceAsync failed: A base price already exists for Product {ProductId} at Shop {ShopId}.", price.ProductId, price.ShopId);
             throw new Exception("A base price already exists for this product at this shop.");
         }
 
         await db.Prices.AddAsync(price);
         await db.SaveChangesAsync();
+
+        logger.LogInformation("Successfully added new price {PriceId} for Product {ProductId} at Shop {ShopId}.", price.Id, price.ProductId, price.ShopId);
 
         return price;
     }
@@ -109,6 +126,7 @@ public class PriceService : IPriceService
 
         if (existingPrice == null)
         {
+            logger.LogWarning("UpdatePriceAsync failed: Price {PriceId} not found.", price.Id);
             throw new Exception("Price not found.");
         }
 
@@ -121,6 +139,8 @@ public class PriceService : IPriceService
         db.Prices.Update(existingPrice);
         await db.SaveChangesAsync();
 
+        logger.LogInformation("Successfully updated price {PriceId}.", price.Id);
+
         return true;
     }
 
@@ -130,6 +150,7 @@ public class PriceService : IPriceService
 
         if (price == null)
         {
+            logger.LogWarning("DeletePriceAsync failed: Price {PriceId} not found.", priceId);
             throw new Exception("Price not found.");
         }
 
@@ -138,6 +159,8 @@ public class PriceService : IPriceService
 
         db.Prices.Update(price);
         await db.SaveChangesAsync();
+
+        logger.LogInformation("Successfully soft-deleted price {PriceId}.", priceId);
 
         return true;
     }
@@ -148,22 +171,27 @@ public class PriceService : IPriceService
 
         if (promotionPrice.EndDate <= DateTime.UtcNow)
         {
+            logger.LogWarning("AddPromotionPriceAsync failed: Promotion end date {EndDate} is not in the future.", promotionPrice.EndDate);
             throw new Exception("Promotion end date must be in the future.");
         }
 
         if (promotionPrice.StartDate >= promotionPrice.EndDate)
         {
+            logger.LogWarning("AddPromotionPriceAsync failed: Promotion start date {StartDate} is after end date {EndDate}.", promotionPrice.StartDate, promotionPrice.EndDate);
             throw new Exception("Promotion start date must be before the end date.");
         }
 
         var basePriceExists = await db.Prices.AnyAsync(p => p.Id == promotionPrice.PriceId);
         if (!basePriceExists && promotionPrice.Price == null)
         {
+            logger.LogWarning("AddPromotionPriceAsync failed: Base price {PriceId} not found.", promotionPrice.PriceId);
             throw new Exception("Base price not found. Cannot attach promotion.");
         }
 
         await db.Set<PromotionPrice>().AddAsync(promotionPrice);
         await db.SaveChangesAsync();
+
+        logger.LogInformation("Successfully added promotion price {PromotionPriceId} to base price {PriceId}.", promotionPrice.Id, promotionPrice.PriceId);
 
         return promotionPrice;
     }
@@ -173,13 +201,18 @@ public class PriceService : IPriceService
         var promo = await db.Set<PromotionPrice>().FindAsync(promotionPriceId);
 
         if (promo == null)
+        {
+            logger.LogWarning("DeletePromotionPriceAsync failed: Promotion {PromotionPriceId} not found.", promotionPriceId);
             throw new Exception("Promotion not found.");
+        }
 
         promo.IsDeleted = true;
         promo.DeletedDate = DateTime.UtcNow;
 
         db.Set<PromotionPrice>().Update(promo);
         await db.SaveChangesAsync();
+
+        logger.LogInformation("Successfully soft-deleted promotion price {PromotionPriceId}.", promotionPriceId);
 
         return true;
     }
@@ -188,6 +221,7 @@ public class PriceService : IPriceService
     {
         if (amount <= 0)
         {
+            logger.LogWarning("Validation failed: Amount {Amount} is less than or equal to 0.", amount);
             throw new Exception("Amount should be greater than 0.");
         }
     }
