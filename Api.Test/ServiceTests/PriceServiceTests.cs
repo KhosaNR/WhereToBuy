@@ -1,4 +1,5 @@
-﻿using API.Models;
+﻿using API.Helpers.Enums;
+using API.Models;
 using API.Models.PriceModels;
 
 namespace ApiTest
@@ -7,7 +8,9 @@ namespace ApiTest
     public class PriceServiceTests : BaseTestClass
     {
         private Product DefaultProduct { get; set; }
+
         private Product DefaultProduct2 { get; set; }
+
         private Shop DefaultShop { get; set; }
 
         [TestInitialize]
@@ -21,14 +24,14 @@ namespace ApiTest
                 UnitOfMeasure = new()
                 {
                     Name = "Grams",
-                    Abbreviation = "g"
+                    Abbreviation = "g",
                 },
                 QuantityPerUnit = 300,
-                Variants = "Original"
+                Variants = "Original",
             };
 
             DefaultProduct = product;
-            db.Products.Add(DefaultProduct);
+            Db.Products.Add(DefaultProduct);
 
             var product2 = new Product()
             {
@@ -37,14 +40,14 @@ namespace ApiTest
                 UnitOfMeasure = new()
                 {
                     Name = "Litres",
-                    Abbreviation = "l"
+                    Abbreviation = "l",
                 },
                 QuantityPerUnit = 2,
-                Variants = "Zero"
+                Variants = "Zero",
             };
 
             DefaultProduct2 = product2;
-            db.Products.Add(DefaultProduct2);
+            Db.Products.Add(DefaultProduct2);
 
             var shop = new Shop()
             {
@@ -54,15 +57,14 @@ namespace ApiTest
                     Link = "https://www.testshop.com",
                     Address = "123 Main St",
                     Longitude = 10.12345,
-                    Latitude = 20.67890
+                    Latitude = 20.67890,
                 },
-                LocationId = Guid.NewGuid()
+                LocationId = Guid.NewGuid(),
             };
             DefaultShop = shop;
-            db.Shops.Add(DefaultShop);
+            Db.Shops.Add(DefaultShop);
 
-            db.SaveChanges();
-
+            Db.SaveChanges();
         }
 
         [TestMethod]
@@ -73,7 +75,7 @@ namespace ApiTest
                 Amount = 10.99M,
                 Url = "https://www.example.com",
                 ProductId = DefaultProduct.Id,
-                ShopId = DefaultShop.Id
+                ShopId = DefaultShop.Id,
             };
 
             await PriceService.AddPriceAsync(price);
@@ -93,7 +95,7 @@ namespace ApiTest
                 Amount = 10.99M,
                 Url = "https://www.example.com",
                 ProductId = DefaultProduct.Id,
-                ShopId = DefaultShop.Id
+                ShopId = DefaultShop.Id,
             };
 
             var price2 = new Price()
@@ -101,7 +103,7 @@ namespace ApiTest
                 Amount = 5.99M,
                 Url = "https://www.example2.com",
                 ProductId = DefaultProduct2.Id,
-                ShopId = DefaultShop.Id
+                ShopId = DefaultShop.Id,
             };
 
             await PriceService.AddPriceAsync(price1);
@@ -113,9 +115,9 @@ namespace ApiTest
             Assert.AreEqual(2, savedPrices.Count, "Two prices are returned.");
         }
 
-        //[TestMethod]
-        //public async Task GetPricesByShopIdAsync_ValidShopId_PricesAreReturned()
-        //{
+        // [TestMethod]
+        // public async Task GetPricesByShopIdAsync_ValidShopId_PricesAreReturned()
+        // {
         //    var price1 = new Price()
         //    {
         //        Amount = 10.99,
@@ -123,7 +125,6 @@ namespace ApiTest
         //        ProductId = Guid.NewGuid(),
         //        ShopId = shopId
         //    };
-
         //    var price2 = new Price()
         //    {
         //        Amount = 5.99,
@@ -131,16 +132,12 @@ namespace ApiTest
         //        ProductId = Guid.NewGuid(),
         //        ShopId = Guid.NewGuid()
         //    };
-
         //    await PriceService.AddPriceAsync(price1);
         //    await PriceService.AddPriceAsync(price2);
-
         //    var savedPrices = await PriceService.GetPricesByShopIdAsync(shopId);
-
         //    Assert.IsNotNull(savedPrices);
         //    Assert.AreEqual(1, savedPrices.Count, "One price is returned.");
-        //}
-
+        // }
         [TestMethod]
         public async Task GetPricesByProductIdAsync_ValidProductId_PricesAreReturned()
         {
@@ -149,7 +146,7 @@ namespace ApiTest
                 Amount = 10.99M,
                 Url = "https://www.example.com",
                 ProductId = DefaultProduct.Id,
-                ShopId = DefaultShop.Id
+                ShopId = DefaultShop.Id,
             };
 
             var price2 = new Price()
@@ -177,12 +174,12 @@ namespace ApiTest
                 Amount = 10.99M,
                 Url = "https://www.example.com",
                 ProductId = DefaultProduct.Id,
-                ShopId = DefaultShop.Id
+                ShopId = DefaultShop.Id,
             };
 
             await PriceService.AddPriceAsync(price);
 
-            var savedPrice = db.Prices.FirstOrDefault();
+            var savedPrice = Db.Prices.FirstOrDefault();
 
             Assert.IsNotNull(savedPrice);
             Assert.AreEqual(price.Amount, savedPrice.Amount, "Amounts are the same.");
@@ -197,7 +194,7 @@ namespace ApiTest
                 Amount = 15.99M,
                 Url = "https://www.example.com",
                 ProductId = DefaultProduct.Id,
-                ShopId = DefaultShop.Id
+                ShopId = DefaultShop.Id,
             };
 
             var promoPrice = new PromotionPrice()
@@ -205,7 +202,7 @@ namespace ApiTest
                 Amount = 10.99M,
                 StartDate = DateTime.UtcNow,
                 EndDate = DateTime.UtcNow.AddDays(1),
-                Price = price
+                Price = price,
             };
 
             await PriceService.AddPromotionPriceAsync(promoPrice);
@@ -225,7 +222,6 @@ namespace ApiTest
             Assert.AreEqual(promoPrice.Price.Url, savedPrice.Url, "Urls are the same.");
         }
 
-
         [TestMethod]
         public async Task AddPriceAsync_InvalidPromotionPriceEndDate_ThrowException()
         {
@@ -234,7 +230,7 @@ namespace ApiTest
                 Amount = 15.99M,
                 Url = "https://www.example.com",
                 ProductId = DefaultProduct.Id,
-                ShopId = DefaultShop.Id
+                ShopId = DefaultShop.Id,
             };
 
             var promoPrice = new PromotionPrice()
@@ -242,7 +238,7 @@ namespace ApiTest
                 Amount = 10.99M,
                 StartDate = DateTime.UtcNow,
                 EndDate = DateTime.UtcNow.AddDays(-1),
-                Price = price
+                Price = price,
             };
 
             await Assert.ThrowsExceptionAsync<Exception>(async () => await PriceService.AddPromotionPriceAsync(promoPrice), "Invalid promotion price end date. Promotion price cannot be less than now.");
@@ -256,7 +252,7 @@ namespace ApiTest
                 Amount = 15.99M,
                 Url = "https://www.example.com",
                 ProductId = DefaultProduct.Id,
-                ShopId = DefaultShop.Id
+                ShopId = DefaultShop.Id,
             };
 
             var promoPrice = new PromotionPrice()
@@ -264,19 +260,19 @@ namespace ApiTest
                 Amount = 10.99M,
                 StartDate = DateTime.UtcNow,
                 EndDate = DateTime.UtcNow.AddDays(1),
-                Price= price
+                Price = price,
             };
             await PriceService.AddPromotionPriceAsync(promoPrice);
             promoPrice.EndDate = DateTime.UtcNow.AddDays(-1);
-            await db.SaveChangesAsync();
+            await Db.SaveChangesAsync();
 
-            db.ChangeTracker.Clear();
+            Db.ChangeTracker.Clear();
 
             var savedPriceList = await PriceService.GetPricesAsync(activePromotionsOnly: true);
             Assert.IsNotNull(savedPriceList, "Prices are not null.");
             var savedPromoPrice = savedPriceList.FirstOrDefault().PromotionPrices;
 
-            Assert.AreEqual(0,savedPromoPrice.Count,"Promotion price is null");
+            Assert.AreEqual(0, savedPromoPrice.Count, "Promotion price is null");
         }
 
         [TestMethod]
@@ -287,11 +283,12 @@ namespace ApiTest
                 Amount = -1,
                 Url = "https://www.example.com",
                 ProductId = Guid.NewGuid(),
-                ShopId = Guid.NewGuid()
+                ShopId = Guid.NewGuid(),
             };
 
             await Assert.ThrowsExceptionAsync<Exception>(async () => await PriceService.AddPriceAsync(price), "Amount should be greater than 0.");
         }
+
         [TestMethod]
         public async Task GetPriceAsync_InvalidId_NullIsReturned()
         {
@@ -325,58 +322,6 @@ namespace ApiTest
         }
 
         [TestMethod]
-        public async Task AddPriceAsync_PriceWithInvalidUnitsPerPack_ThrowsException()
-        {
-            var product = new Product()
-            {
-                Name = "Test Product",
-                Description = "Test Product Description",
-                UnitOfMeasure = new()
-                {
-                    Name = "Pieces",
-                    Abbreviation = "pcs"
-                },
-                QuantityPerUnit = 2,
-                Variants = "Test Variant"
-            };
-            var price = new Price()
-            {
-                Amount = 10.99M,
-                Url = "https://www.example.com",
-                Product = product,
-                ShopId = Guid.NewGuid(),
-            };
-
-            await Assert.ThrowsExceptionAsync<Exception>(async () => await PriceService.AddPriceAsync(price), "Cannot set units per pack if price is not for pack.");
-        }
-
-        [TestMethod]
-        public async Task AddPriceAsync_PriceWithInvalidPackUnitsPerPack_ThrowsException()
-        {
-            var product = new Product()
-            {
-                Name = "Test Product",
-                Description = "Test Product Description",
-                UnitOfMeasure = new()
-                {
-                    Name = "Pieces",
-                    Abbreviation = "pcs"
-                },
-                QuantityPerUnit = 2,
-                Variants = "Test Variant"
-            };
-            var price = new Price()
-            {
-                Amount = 10.99M,
-                Url = "https://www.example.com",
-                ShopId = Guid.NewGuid(),
-                Product = product,
-            };
-
-            await Assert.ThrowsExceptionAsync<Exception>(async () => await PriceService.AddPriceAsync(price), "Units per pack should be more than 1 is price per pack.");
-        }
-
-        [TestMethod]
         public async Task UpdatePriceAsync_ValidPrice_PriceIsUpdated()
         {
             var price = new Price()
@@ -384,7 +329,7 @@ namespace ApiTest
                 Amount = 10.99M,
                 Url = "https://www.example.com",
                 ProductId = DefaultProduct.Id,
-                ShopId = DefaultShop.Id
+                ShopId = DefaultShop.Id,
             };
 
             await PriceService.AddPriceAsync(price);
@@ -393,7 +338,7 @@ namespace ApiTest
 
             await PriceService.UpdatePriceAsync(price);
 
-            var savedPrice = db.Prices.FirstOrDefault();
+            var savedPrice = Db.Prices.FirstOrDefault();
 
             Assert.IsNotNull(savedPrice);
             Assert.AreEqual(price.Amount, savedPrice.Amount, "Amounts are the same.");
@@ -407,7 +352,7 @@ namespace ApiTest
                 Amount = 10.99M,
                 Url = "https://www.example.com",
                 ProductId = DefaultProduct.Id,
-                ShopId = DefaultShop.Id
+                ShopId = DefaultShop.Id,
             };
 
             await PriceService.AddPriceAsync(price);
@@ -425,14 +370,14 @@ namespace ApiTest
                 Amount = 10.99M,
                 Url = "https://www.example.com",
                 ProductId = DefaultProduct.Id,
-                ShopId = DefaultShop.Id
+                ShopId = DefaultShop.Id,
             };
 
             await PriceService.AddPriceAsync(price);
 
             await PriceService.DeletePriceAsync(price.Id);
 
-            var savedPrice = db.Prices.FirstOrDefault();
+            var savedPrice = Db.Prices.FirstOrDefault();
 
             Assert.IsNull(savedPrice);
         }

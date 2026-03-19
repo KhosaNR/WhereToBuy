@@ -1,7 +1,7 @@
 ﻿namespace API.Models
 {
-    public class Guest: User
+    public class Guest : User
     {
-        DateTime tokenExpiryDate { get; set; }
+        public DateTime TokenExpiryDate { get; set; }
     }
 }

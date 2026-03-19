@@ -27,7 +27,7 @@ builder.Host.UseSerilog((context, loggerConfiguration) =>
     var sinkOptions = new MSSqlServerSinkOptions
     {
         TableName = "SystemLogs",
-        AutoCreateSqlTable = true
+        AutoCreateSqlTable = true,
     };
 
     loggerConfiguration
@@ -39,14 +39,17 @@ builder.Host.UseSerilog((context, loggerConfiguration) =>
             sinkOptions: sinkOptions);
 });
 
-builder.Services.AddAutoMapper(typeof(AutoMapperProfile));
+builder.Services.AddAutoMapper(cfg =>
+{
+    cfg.AddProfile<AutoMapperProfile>();
+});
 
 builder.Services.AddTransient<IProductService, ProductService>();
 builder.Services.AddTransient<IPriceService, PriceService>();
 builder.Services.AddTransient<IProductSearchService, ProductSearchService>();
-builder.Services.AddTransient<IPricingService, PricingService>();
 builder.Services.AddTransient<IShopService, ShopService>();
 builder.Services.AddTransient<IStockListService, StockListService>();
+builder.Services.AddTransient<IStockProductService, StockProductService>();
 
 var app = builder.Build();
 
@@ -69,7 +72,10 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 // app.UseAuthorization();
-
 app.MapShopEndPoints();
+app.MapProductEndPoints();
+app.MapPriceEndPoints();
+app.MapStockListEndPoints();
+app.MapStockProductEndPoints();
 
 app.Run();

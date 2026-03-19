@@ -1,8 +1,8 @@
-﻿using API.Models;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using API.Models;
 using LinqKit;
 using Microsoft.Extensions.Logging;
 
@@ -31,6 +31,7 @@ public class ProductSearchService : IProductSearchService
             logger.LogInformation("Search string is empty. Returning all products.");
             return db.Products.ToList();
         }
+
         var keywords = searchString.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
         var predicate = BuildPredicate(keywords);
 
@@ -47,7 +48,7 @@ public class ProductSearchService : IProductSearchService
                     (p.Description.Contains(k, StringComparison.InvariantCultureIgnoreCase) ? 1 : 0) +
                     (p.UnitOfMeasure.Name.Contains(k, StringComparison.InvariantCultureIgnoreCase) ? 1 : 0) +
                     (p.QuantityPerUnit.ToString().Contains(k, StringComparison.InvariantCultureIgnoreCase) ? 1 : 0) +
-                    (p.Variants.Contains(k, StringComparison.InvariantCultureIgnoreCase) ? 1 : 0))
+                    (p.Variants.Contains(k, StringComparison.InvariantCultureIgnoreCase) ? 1 : 0)),
             })
             .OrderByDescending(x => x.Rank)
             .Select(x => x.Product)

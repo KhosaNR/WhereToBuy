@@ -2,15 +2,17 @@
 {
     using System.ComponentModel.DataAnnotations;
 
-    public class ShopDto
+    public class StockListDto
     {
         public Guid Id { get; set; }
 
         [Required]
         public string Name { get; set; }
 
-        public LocationDto Location { get; set; }
+        public Guid OwnerId { get; set; }
 
-        public Guid LocationId { get; set; }
+        public bool IsActive { get; set; }
+
+        public List<StockListProductDto>? Products { get; set; }
     }
 }

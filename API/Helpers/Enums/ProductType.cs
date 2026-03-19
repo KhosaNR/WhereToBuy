@@ -1,7 +1,7 @@
-﻿using System.ComponentModel;
-
-namespace API.Helpers.Enums
+﻿namespace API.Helpers.Enums
 {
+    using System.ComponentModel;
+
     public enum ProductType
     {
         [Description("Single Unit")]

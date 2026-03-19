@@ -1,19 +1,23 @@
 ﻿namespace API.AutoMapper
 {
-    using AutoMapper;
-    using global::AutoMapper;
     using API.Models;
     using API.Models.Dtos;
+    using API.Models.PriceModels;
+    using global::AutoMapper;
 
     public class AutoMapperProfile : Profile
     {
         public AutoMapperProfile()
         {
-            CreateMap<Product, Product>();
-            CreateMap<Shop, Shop>();
-
             CreateMap<Location, LocationDto>().ReverseMap();
             CreateMap<Shop, ShopDto>().ReverseMap();
+            CreateMap<Product, ProductDto>().ReverseMap();
+
+            CreateMap<Price, PriceDto>().ReverseMap();
+            CreateMap<PromotionPrice, PromotionPriceDto>().ReverseMap();
+
+            CreateMap<StockList, StockListDto>().ReverseMap();
+            CreateMap<StockListProduct, StockListProductDto>().ReverseMap();
         }
     }
 }

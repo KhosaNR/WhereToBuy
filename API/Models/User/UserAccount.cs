@@ -1,6 +1,6 @@
 ﻿namespace API.Models
 {
-    public class UserAccount: User //, IndentityUser
+    public class UserAccount : User // , IndentityUser
     {
     }
 }

@@ -1,12 +1,13 @@
-﻿using API.Models.BaseClasses;
-using System.ComponentModel.DataAnnotations;
-
-namespace API.Models
+﻿namespace API.Models
 {
+    using System.ComponentModel.DataAnnotations;
+    using API.Models.BaseClasses;
+
     public class MeasurementUnit : BaseAuditableEntity
     {
         [Required]
         public string Abbreviation { get; set; }
+
         public string Name { get; set; }
     }
 }

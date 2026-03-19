@@ -5,6 +5,6 @@
         Normal,
         Pack,
         Promotion,
-        Bulk
+        Bulk,
     }
 }

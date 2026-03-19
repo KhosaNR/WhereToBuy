@@ -1,12 +1,13 @@
-﻿using API.Models;
-using System.Drawing.Printing;
-using Microsoft.Extensions.Logging;
-
-namespace API.Services
+﻿namespace API.Services
 {
+    using System.Drawing.Printing;
+    using API.Models;
+    using Microsoft.Extensions.Logging;
+
     public interface IStockProductService
     {
         Task AddOrUpdateProduct(Guid stockListId, StockListProduct product, Guid currentUserId);
+
         Task<bool> RemoveProduct(Guid stockListId, Guid productId, Guid currentUserId);
     }
 
@@ -30,6 +31,7 @@ namespace API.Services
                 logger.LogWarning("AddOrUpdateProduct failed: Product is linked to list {ProductStockListId}, not target list {StockListId}.", product.StockListId, stockListId);
                 throw new Exception("Product linked to a different list");
             }
+
             await ValidateStockListExist(stockListId);
 
             ValidateUserCanEditStockList(stockListId, currentUserId);

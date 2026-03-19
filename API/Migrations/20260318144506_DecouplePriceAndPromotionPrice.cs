@@ -1,10 +1,10 @@
-﻿using System;
-using Microsoft.EntityFrameworkCore.Migrations;
-
-#nullable disable
+﻿#nullable disable
 
 namespace API.Migrations
 {
+    using System;
+    using Microsoft.EntityFrameworkCore.Migrations;
+
     /// <inheritdoc />
     public partial class DecouplePriceAndPromotionPrice : Migration
     {
@@ -300,7 +300,7 @@ namespace API.Migrations
                     ModifiedById = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     DeletedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     DeletedById = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
                 },
                 constraints: table =>
                 {
@@ -320,7 +320,7 @@ namespace API.Migrations
                     ModifiedById = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     DeletedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     DeletedById = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
                 },
                 constraints: table =>
                 {
@@ -339,7 +339,7 @@ namespace API.Migrations
                     ModifiedById = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     DeletedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     DeletedById = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
                 },
                 constraints: table =>
                 {
@@ -359,7 +359,7 @@ namespace API.Migrations
                     ModifiedById = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     DeletedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     DeletedById = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
                 },
                 constraints: table =>
                 {
@@ -389,7 +389,7 @@ namespace API.Migrations
                     ModifiedById = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     DeletedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     DeletedById = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
                 },
                 constraints: table =>
                 {
@@ -406,7 +406,7 @@ namespace API.Migrations
                 name: "Guest",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                 },
                 constraints: table =>
                 {
@@ -433,7 +433,7 @@ namespace API.Migrations
                     ModifiedById = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     DeletedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     DeletedById = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
                 },
                 constraints: table =>
                 {
@@ -449,7 +449,7 @@ namespace API.Migrations
                 name: "UserAccount",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                 },
                 constraints: table =>
                 {
@@ -478,7 +478,7 @@ namespace API.Migrations
                     ModifiedById = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     DeletedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     DeletedById = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
                 },
                 constraints: table =>
                 {
@@ -509,7 +509,7 @@ namespace API.Migrations
                     ModifiedById = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     DeletedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     DeletedById = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
                 },
                 constraints: table =>
                 {
@@ -543,7 +543,7 @@ namespace API.Migrations
                     ModifiedById = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     DeletedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     DeletedById = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
                 },
                 constraints: table =>
                 {
@@ -836,7 +836,7 @@ namespace API.Migrations
                 type: "nvarchar(21)",
                 maxLength: 21,
                 nullable: false,
-                defaultValue: "");
+                defaultValue: string.Empty);
 
             migrationBuilder.AddColumn<Guid>(
                 name: "ProductId",

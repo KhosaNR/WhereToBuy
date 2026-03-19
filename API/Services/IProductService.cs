@@ -1,17 +1,24 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Internal;
-using API.Models;
-using AutoMapper;
-using System.Data.Entity;
-using Microsoft.Extensions.Logging;
-
-namespace API.Services
+﻿namespace API.Services
 {
+    using API.Models;
+    using API.Models.Dtos;
+    using global::AutoMapper;
+    using Microsoft.EntityFrameworkCore;
+    using Microsoft.Extensions.Logging;
+
     public interface IProductService
     {
+        Task<CursorPagedResult<Product>> GetAllProductsAsync(int pageSize, DateTime? cursor);
+
+        Task<Product?> GetProductAsync(Guid id);
+
         Task AddProductAsync(Product product);
+
         Task<List<Product>> SearchProductAsync(string searchKeywords);
+
         Task<bool> UpdateProductAsync(Product product);
+
+        Task<bool> DeleteProductAsync(Guid id);
     }
 
     public class ProductService : IProductService
@@ -27,6 +34,32 @@ namespace API.Services
             this.productSearchService = productSearchService;
             this.map = map;
             this.logger = logger;
+        }
+
+        public async Task<CursorPagedResult<Product>> GetAllProductsAsync(int pageSize, DateTime? cursor)
+        {
+            var query = db.Products.AsNoTracking().OrderByDescending(p => p.CreatedDate).AsQueryable();
+
+            if (cursor.HasValue)
+            {
+                query = query.Where(p => p.CreatedDate < cursor.Value);
+            }
+
+            var items = await query.Take(pageSize + 1).ToListAsync();
+            var hasNextPage = items.Count > pageSize;
+            var resultItems = hasNextPage ? items.Take(pageSize).ToList() : items;
+            var nextCursor = hasNextPage ? resultItems.Last().CreatedDate : (DateTime?)null;
+
+            return new CursorPagedResult<Product>
+            {
+                Data = resultItems,
+                NextCursor = nextCursor,
+            };
+        }
+
+        public async Task<Product?> GetProductAsync(Guid id)
+        {
+            return await db.Products.AsNoTracking().FirstOrDefaultAsync(p => p.Id == id);
         }
 
         public async Task AddProductAsync(Product product)
@@ -84,6 +117,26 @@ namespace API.Services
             return true;
         }
 
+        public async Task<bool> DeleteProductAsync(Guid id)
+        {
+            var product = await db.Products.FindAsync(id);
+
+            if (product == null)
+            {
+                logger.LogWarning("DeleteProductAsync failed: Product {ProductId} not found.", id);
+                throw new Exception("Product not found.");
+            }
+
+            product.IsDeleted = true;
+            product.DeletedDate = DateTime.UtcNow;
+
+            await db.SaveChangesAsync();
+
+            logger.LogInformation("Successfully soft-deleted product {ProductId}.", id);
+
+            return true;
+        }
+
         public void ValidateProduct(Product product)
         {
             if (product == null)
@@ -102,12 +155,6 @@ namespace API.Services
             {
                 logger.LogWarning("Validation failed: Product quantity {Quantity} is negative.", product.QuantityPerUnit);
                 throw new ArgumentException("Product quantity cannot be negative.");
-            }
-
-            if (product.UnitOfMeasure == null)
-            {
-                logger.LogWarning("Validation failed: Product Unit of Measure is null.");
-                throw new ArgumentException("Product unit of measure cannot be empty.");
             }
         }
     }

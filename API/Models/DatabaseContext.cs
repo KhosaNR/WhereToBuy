@@ -1,33 +1,67 @@
-﻿using API.Models;
+﻿using System.Reflection;
 using API.Models.BaseClasses;
 using API.Models.PriceModels;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Reflection;
 
 namespace API.Models;
 
 public partial class DatabaseContext : DbContext
 {
-    public DbSet<Product> Products { get; set; }
-    public DbSet<MeasurementUnit> MeasurementUnits { get; set; }
-    public DbSet<ProductTag> Tag { get; set; }
-    public DbSet<Price> Prices { get; set; }
-    public DbSet<PromotionPrice> PromotionPrices { get; set; }
-    public DbSet<StockList> StockLists { get; set; }
-    public DbSet<StockListProduct> StockListProducts { get; set; }
-    public DbSet<UserStockList> UserStockLists { get; set; }
-    public DbSet<User> Users { get; set; }
-    public DbSet<Shop> Shops { get; set; }
-    public DbSet<Location> Locations { get; set; }
-
-    public DatabaseContext() { }
+    public DatabaseContext()
+    {
+    }
 
     public DatabaseContext(DbContextOptions<DatabaseContext> options)
-        : base(options) { }
+    : base(options)
+    {
+    }
+
+    public DbSet<Product> Products { get; set; }
+
+    public DbSet<MeasurementUnit> MeasurementUnits { get; set; }
+
+    public DbSet<ProductTag> Tag { get; set; }
+
+    public DbSet<Price> Prices { get; set; }
+
+    public DbSet<PromotionPrice> PromotionPrices { get; set; }
+
+    public DbSet<StockList> StockLists { get; set; }
+
+    public DbSet<StockListProduct> StockListProducts { get; set; }
+
+    public DbSet<UserStockList> UserStockLists { get; set; }
+
+    public DbSet<User> Users { get; set; }
+
+    public DbSet<Shop> Shops { get; set; }
+
+    public DbSet<Location> Locations { get; set; }
+
+    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        foreach (var entry in ChangeTracker.Entries<BaseAuditableEntity>())
+        {
+            if (entry.State == EntityState.Added)
+            {
+                entry.Entity.CreatedDate = DateTime.UtcNow;
+            }
+
+            if (entry.State == EntityState.Modified)
+            {
+                entry.Entity.ModifiedDate = DateTime.UtcNow;
+            }
+
+            if (entry.State == EntityState.Deleted)
+            {
+                entry.State = EntityState.Modified;
+                entry.Entity.ModifiedDate = DateTime.UtcNow;
+                entry.Entity.IsDeleted = true;
+            }
+        }
+
+        return await base.SaveChangesAsync(cancellationToken);
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -125,34 +159,11 @@ public partial class DatabaseContext : DbContext
         OnModelCreatingPartial(modelBuilder);
     }
 
-    private void SetGlobalQueryFilter<T>(ModelBuilder builder) where T : BaseAuditableEntity
+    partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
+
+    private void SetGlobalQueryFilter<T>(ModelBuilder builder)
+    where T : BaseAuditableEntity
     {
         builder.Entity<T>().HasQueryFilter(e => !e.IsDeleted);
     }
-
-    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
-    {
-        foreach (var entry in ChangeTracker.Entries<BaseAuditableEntity>())
-        {
-            if (entry.State == EntityState.Added)
-            {
-                entry.Entity.CreatedDate = DateTime.UtcNow;
-            }
-
-            if (entry.State == EntityState.Modified)
-            {
-                entry.Entity.ModifiedDate = DateTime.UtcNow;
-            }
-
-            if (entry.State == EntityState.Deleted)
-            {
-                entry.State = EntityState.Modified;
-                entry.Entity.ModifiedDate = DateTime.UtcNow;
-                entry.Entity.IsDeleted = true;
-            }
-        }
-        return await base.SaveChangesAsync(cancellationToken);
-    }
-
-    partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
 }

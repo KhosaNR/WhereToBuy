@@ -1,10 +1,11 @@
-﻿using API.Models.BaseClasses;
-
-namespace API.Models
+﻿namespace API.Models
 {
+    using API.Models.BaseClasses;
+
     public class User : BaseAuditableEntity
     {
-        public String? Username { get; set; }
+        public string? Username { get; set; }
+
         public List<UserStockList> StockLists { get; set; }
     }
 }

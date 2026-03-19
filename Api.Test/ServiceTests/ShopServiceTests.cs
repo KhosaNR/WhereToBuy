@@ -17,14 +17,14 @@ namespace ApiTest
                     Link = "https://www.testshop.com",
                     Address = "123 Main St",
                     Longitude = 10.12345,
-                    Latitude = 20.67890
+                    Latitude = 20.67890,
                 },
-                LocationId = Guid.NewGuid()
+                LocationId = Guid.NewGuid(),
             };
 
             await ShopService.AddShopAsync(shop);
 
-            var savedShop = db.Shops.FirstOrDefault();
+            var savedShop = Db.Shops.FirstOrDefault();
 
             Assert.IsNotNull(savedShop);
             Assert.AreEqual("Test Shop", savedShop.Name, "Shop names are the same.");
@@ -43,9 +43,9 @@ namespace ApiTest
                     Link = "https://www.testshop.com",
                     Address = "123 Main St",
                     Longitude = 10.12345,
-                    Latitude = 20.67890
+                    Latitude = 20.67890,
                 },
-                LocationId = Guid.NewGuid()
+                LocationId = Guid.NewGuid(),
             };
 
             var shop2 = new Shop()
@@ -56,9 +56,9 @@ namespace ApiTest
                     Link = "https://www.testshop.com",
                     Address = "123 Main St",
                     Longitude = 10.12345,
-                    Latitude = 20.67890
+                    Latitude = 20.67890,
                 },
-                LocationId = Guid.NewGuid()
+                LocationId = Guid.NewGuid(),
             };
 
             await ShopService.AddShopAsync(shop1);
@@ -71,15 +71,15 @@ namespace ApiTest
         {
             var shop = new Shop()
             {
-                Name = "",
+                Name = string.Empty,
                 Location = new Location()
                 {
                     Link = "https://www.testshop.com",
                     Address = "123 Main St",
                     Longitude = 10.12345,
-                    Latitude = 20.67890
+                    Latitude = 20.67890,
                 },
-                LocationId = Guid.NewGuid()
+                LocationId = Guid.NewGuid(),
             };
 
             await Assert.ThrowsExceptionAsync<Exception>(async () => await ShopService.AddShopAsync(shop), "Shop name cannot be empty.");
@@ -96,9 +96,9 @@ namespace ApiTest
                     Link = "https://www.testshop.com",
                     Address = "123 Main St",
                     Longitude = 10.12345,
-                    Latitude = 20.67890
+                    Latitude = 20.67890,
                 },
-                LocationId = Guid.NewGuid()
+                LocationId = Guid.NewGuid(),
             };
 
             await ShopService.AddShopAsync(shop);
@@ -107,7 +107,7 @@ namespace ApiTest
 
             await ShopService.UpdateShopAsync(shop);
 
-            var savedShop = db.Shops.FirstOrDefault();
+            var savedShop = Db.Shops.FirstOrDefault();
 
             Assert.IsNotNull(savedShop);
             Assert.AreEqual("Updated Test Shop", savedShop.Name, "Shop names are the same.");
@@ -124,18 +124,18 @@ namespace ApiTest
                     Link = "https://www.testshop.com",
                     Address = "123 Main St",
                     Longitude = 10.12345,
-                    Latitude = 20.67890
+                    Latitude = 20.67890,
                 },
-                LocationId = Guid.NewGuid()
+                LocationId = Guid.NewGuid(),
             };
 
             await ShopService.AddShopAsync(shop);
 
             await ShopService.DeleteShopAsync(shop.Id);
 
-            var savedShop = db.Shops.FirstOrDefault();
+            var savedShop = Db.Shops.FirstOrDefault();
 
-            Assert.IsNull(savedShop,"Shop is soft deleted");
+            Assert.IsNull(savedShop, "Shop is soft deleted");
         }
     }
 }

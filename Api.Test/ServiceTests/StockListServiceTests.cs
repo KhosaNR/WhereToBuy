@@ -1,18 +1,18 @@
-﻿using API.Models;
-using ApiTest;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using API.Models;
+using ApiTest;
 
 namespace Api.Test.ServiceTests
 {
     [TestClass]
     public class StockListServiceTests : BaseTestClass
     {
-        private StockListProduct stockListProduct;
-        private StockList stockList;
+        // private StockListProduct stockListProduct;
+        // private StockList stockList;
         private User guestUser;
 
         [TestInitialize]
@@ -23,22 +23,20 @@ namespace Api.Test.ServiceTests
                 Username = "Guest User",
             };
 
-            db.Users.Add(guestUser);
-            db.SaveChanges();
+            Db.Users.Add(guestUser);
+            Db.SaveChanges();
         }
 
         [TestMethod]
         public async Task CreateStockList_ValidStockUserId_CreatesStockList()
         {
+            await StockListService.CreateStockList(guestUser.Id, string.Empty);
 
-            await StockListService.CreateStockList(guestUser.Id, "");
-
-            var stockList = db.StockLists.FirstOrDefault();
+            var stockList = Db.StockLists.FirstOrDefault();
 
             Assert.IsNotNull(stockList, "Stock list is not null");
             Assert.AreEqual(guestUser.Id, stockList.OwnerId, "Stock list owner is guest.");
         }
-
 
         [TestMethod]
         public async Task CreateStockList_DuplicateStockListName_ThrowsException()
@@ -46,8 +44,8 @@ namespace Api.Test.ServiceTests
             // Arrange
             var userId = Guid.NewGuid();
             var stockListName = "Test Stock List";
-            await db.Users.AddAsync((new User { Id = userId, Username = "Test user" }));
-            await db.SaveChangesAsync();
+            await Db.Users.AddAsync(new User { Id = userId, Username = "Test user" });
+            await Db.SaveChangesAsync();
             await StockListService.CreateStockList(userId, stockListName);
 
             // Act and Assert
@@ -71,16 +69,16 @@ namespace Api.Test.ServiceTests
             // Arrange
             var userId = Guid.NewGuid();
             var stockListName = "Test Stock List";
-            await db.Users.AddAsync((new User { Id = userId, Username = "Test user" }));
-            await db.SaveChangesAsync();
+            await Db.Users.AddAsync(new User { Id = userId, Username = "Test user" });
+            await Db.SaveChangesAsync();
             await StockListService.CreateStockList(userId, stockListName);
-            var stockList = db.StockLists.FirstOrDefault(s => s.OwnerId == userId && s.Name == stockListName);
+            var stockList = Db.StockLists.FirstOrDefault(s => s.OwnerId == userId && s.Name == stockListName);
 
             // Act
             await StockListService.DeleteStockList(stockList.Id, userId);
 
             // Assert
-            var savedStockList = db.StockLists.FirstOrDefault(s => s.Id == stockList.Id);
+            var savedStockList = Db.StockLists.FirstOrDefault(s => s.Id == stockList.Id);
             Assert.IsNull(savedStockList);
         }
 
@@ -101,10 +99,10 @@ namespace Api.Test.ServiceTests
             // Arrange
             var userId = Guid.NewGuid();
             var stockListName = "Test Stock List";
-            await db.Users.AddAsync((new User { Id = userId, Username = "Test user" }));
-            await db.SaveChangesAsync();
+            await Db.Users.AddAsync(new User { Id = userId, Username = "Test user" });
+            await Db.SaveChangesAsync();
             await StockListService.CreateStockList(userId, stockListName);
-            var stockList = db.StockLists.FirstOrDefault(s => s.OwnerId == userId && s.Name == stockListName);
+            var stockList = Db.StockLists.FirstOrDefault(s => s.OwnerId == userId && s.Name == stockListName);
             var unauthorizedUserId = Guid.NewGuid();
 
             // Act and Assert
@@ -117,17 +115,17 @@ namespace Api.Test.ServiceTests
             // Arrange
             var userId = Guid.NewGuid();
             var stockListName = "Test Stock List";
-            await db.Users.AddAsync((new User { Id = userId, Username = "Test user" }));
-            await db.SaveChangesAsync();
+            await Db.Users.AddAsync(new User { Id = userId, Username = "Test user" });
+            await Db.SaveChangesAsync();
             await StockListService.CreateStockList(userId, stockListName);
-            var stockList = db.StockLists.FirstOrDefault(s => s.OwnerId == userId && s.Name == stockListName);
+            var stockList = Db.StockLists.FirstOrDefault(s => s.OwnerId == userId && s.Name == stockListName);
             var newStockListName = "Updated Test Stock List";
 
             // Act
             await StockListService.UpdateStockList(stockList.Id, newStockListName, userId);
 
             // Assert
-            var savedStockList = db.StockLists.FirstOrDefault(s => s.Id == stockList.Id);
+            var savedStockList = Db.StockLists.FirstOrDefault(s => s.Id == stockList.Id);
             Assert.IsNotNull(savedStockList);
             Assert.AreEqual(newStockListName, savedStockList.Name);
         }
@@ -150,19 +148,19 @@ namespace Api.Test.ServiceTests
             // Arrange
             var userId = Guid.NewGuid();
             var stockListName = "Test Stock List";
-            await db.Users.AddAsync((new User { Id = userId, Username = "Test user" }));
-            await db.SaveChangesAsync();
+            await Db.Users.AddAsync(new User { Id = userId, Username = "Test user" });
+            await Db.SaveChangesAsync();
             await StockListService.CreateStockList(userId, stockListName);
-            var stockList = db.StockLists.FirstOrDefault(s => s.OwnerId == userId && s.Name == stockListName);
+            var stockList = Db.StockLists.FirstOrDefault(s => s.OwnerId == userId && s.Name == stockListName);
             var newUser = new User { Id = Guid.NewGuid() };
-            await db.Users.AddAsync(newUser);
-            await db.SaveChangesAsync();
+            await Db.Users.AddAsync(newUser);
+            await Db.SaveChangesAsync();
 
             // Act
             await StockListService.AddUser(stockList.Id, newUser.Id, userId);
 
             // Assert
-            var userStockList = db.UserStockLists.FirstOrDefault(us => us.StockListId == stockList.Id && us.UserId == newUser.Id);
+            var userStockList = Db.UserStockLists.FirstOrDefault(us => us.StockListId == stockList.Id && us.UserId == newUser.Id);
             Assert.IsNotNull(userStockList);
             Assert.IsTrue(userStockList.IsActive);
         }
@@ -174,8 +172,8 @@ namespace Api.Test.ServiceTests
             var userId = Guid.NewGuid();
             var stockListId = Guid.NewGuid();
             var newUser = new User { Id = Guid.NewGuid() };
-            await db.Users.AddAsync(newUser);
-            await db.SaveChangesAsync();
+            await Db.Users.AddAsync(newUser);
+            await Db.SaveChangesAsync();
 
             // Act and Assert
             await Assert.ThrowsExceptionAsync<Exception>(async () => await StockListService.AddUser(stockListId, newUser.Id, userId), "List not found.");
@@ -187,13 +185,13 @@ namespace Api.Test.ServiceTests
             // Arrange
             var userId = Guid.NewGuid();
             var stockListName = "Test Stock List";
-            await db.Users.AddAsync((new User { Id = userId, Username = "Test user" }));
-            await db.SaveChangesAsync();
+            await Db.Users.AddAsync(new User { Id = userId, Username = "Test user" });
+            await Db.SaveChangesAsync();
             await StockListService.CreateStockList(userId, stockListName);
-            var stockList = db.StockLists.FirstOrDefault(s => s.OwnerId == userId && s.Name == stockListName);
+            var stockList = Db.StockLists.FirstOrDefault(s => s.OwnerId == userId && s.Name == stockListName);
             var newUser = new User { Id = Guid.NewGuid() };
-            await db.Users.AddAsync(newUser);
-            await db.SaveChangesAsync();
+            await Db.Users.AddAsync(newUser);
+            await Db.SaveChangesAsync();
             await StockListService.AddUser(stockList.Id, newUser.Id, userId);
 
             // Act and Assert
@@ -206,23 +204,23 @@ namespace Api.Test.ServiceTests
             // Arrange
             var userId = Guid.NewGuid();
             var stockListName = "Test Stock List";
-            await db.Users.AddAsync((new User { Id = userId, Username = "Test user" }));
-            await db.SaveChangesAsync();
+            await Db.Users.AddAsync(new User { Id = userId, Username = "Test user" });
+            await Db.SaveChangesAsync();
             await StockListService.CreateStockList(userId, stockListName);
-            var stockList = db.StockLists.FirstOrDefault(s => s.OwnerId == userId && s.Name == stockListName);
+            var stockList = Db.StockLists.FirstOrDefault(s => s.OwnerId == userId && s.Name == stockListName);
             var newUser = new User { Id = Guid.NewGuid() };
-            await db.Users.AddAsync(newUser);
-            await db.SaveChangesAsync();
+            await Db.Users.AddAsync(newUser);
+            await Db.SaveChangesAsync();
             await StockListService.AddUser(stockList.Id, newUser.Id, userId);
-            var userStockList = db.UserStockLists.FirstOrDefault(us => us.StockListId == stockList.Id && us.UserId == newUser.Id);
+            var userStockList = Db.UserStockLists.FirstOrDefault(us => us.StockListId == stockList.Id && us.UserId == newUser.Id);
             userStockList.IsActive = false;
-            await db.SaveChangesAsync();
+            await Db.SaveChangesAsync();
 
             // Act
             await StockListService.AddUser(stockList.Id, newUser.Id, userId);
 
             // Assert
-            var savedUserStockList = db.UserStockLists.FirstOrDefault(us => us.StockListId == stockList.Id && us.UserId == newUser.Id);
+            var savedUserStockList = Db.UserStockLists.FirstOrDefault(us => us.StockListId == stockList.Id && us.UserId == newUser.Id);
             Assert.IsNotNull(savedUserStockList);
             Assert.IsTrue(savedUserStockList.IsActive);
         }
@@ -233,20 +231,20 @@ namespace Api.Test.ServiceTests
             // Arrange
             var userId = Guid.NewGuid();
             var stockListName = "Test Stock List";
-            await db.Users.AddAsync((new User { Id = userId, Username = "Test user" }));
-            await db.SaveChangesAsync();
+            await Db.Users.AddAsync(new User { Id = userId, Username = "Test user" });
+            await Db.SaveChangesAsync();
             await StockListService.CreateStockList(userId, stockListName);
-            var stockList = db.StockLists.FirstOrDefault(s => s.OwnerId == userId && s.Name == stockListName);
+            var stockList = Db.StockLists.FirstOrDefault(s => s.OwnerId == userId && s.Name == stockListName);
             var newUser = new User { Id = Guid.NewGuid() };
-            await db.Users.AddAsync(newUser);
-            await db.SaveChangesAsync();
+            await Db.Users.AddAsync(newUser);
+            await Db.SaveChangesAsync();
             await StockListService.AddUser(stockList.Id, newUser.Id, userId);
 
             // Act
             await StockListService.RemoveUser(stockList.Id, newUser.Id, userId);
 
             // Assert
-            var userStockList = db.UserStockLists.FirstOrDefault(us => us.StockListId == stockList.Id && us.UserId == newUser.Id);
+            var userStockList = Db.UserStockLists.FirstOrDefault(us => us.StockListId == stockList.Id && us.UserId == newUser.Id);
             Assert.IsNotNull(userStockList);
             Assert.IsFalse(userStockList.IsActive);
         }
@@ -269,13 +267,13 @@ namespace Api.Test.ServiceTests
             // Arrange
             var userId = Guid.NewGuid();
             var stockListName = "Test Stock List";
-            await db.Users.AddAsync((new User { Id = userId, Username = "Test user" }));
-            await db.SaveChangesAsync();
+            await Db.Users.AddAsync(new User { Id = userId, Username = "Test user" });
+            await Db.SaveChangesAsync();
             await StockListService.CreateStockList(userId, stockListName);
-            var stockList = db.StockLists.FirstOrDefault(s => s.OwnerId == userId && s.Name == stockListName);
+            var stockList = Db.StockLists.FirstOrDefault(s => s.OwnerId == userId && s.Name == stockListName);
             var newUser = new User { Id = Guid.NewGuid() };
-            await db.Users.AddAsync(newUser);
-            await db.SaveChangesAsync();
+            await Db.Users.AddAsync(newUser);
+            await Db.SaveChangesAsync();
             await StockListService.AddUser(stockList.Id, newUser.Id, userId);
             var unauthorizedUserId = Guid.NewGuid();
 
@@ -289,13 +287,13 @@ namespace Api.Test.ServiceTests
             // Arrange
             var userId = Guid.NewGuid();
             var stockListName = "Test Stock List";
-            await db.Users.AddAsync((new User { Id = userId, Username = "Test user" }));
-            await db.SaveChangesAsync();
+            await Db.Users.AddAsync(new User { Id = userId, Username = "Test user" });
+            await Db.SaveChangesAsync();
             await StockListService.CreateStockList(userId, stockListName);
-            var stockList = db.StockLists.FirstOrDefault(s => s.OwnerId == userId && s.Name == stockListName);
+            var stockList = Db.StockLists.FirstOrDefault(s => s.OwnerId == userId && s.Name == stockListName);
             var newUser = new User { Id = Guid.NewGuid() };
-            await db.Users.AddAsync(newUser);
-            await db.SaveChangesAsync();
+            await Db.Users.AddAsync(newUser);
+            await Db.SaveChangesAsync();
 
             // Act and Assert
             await Assert.ThrowsExceptionAsync<Exception>(async () => await StockListService.RemoveUser(stockList.Id, newUser.Id, userId), "User not linked to list.");
@@ -307,16 +305,16 @@ namespace Api.Test.ServiceTests
             // Arrange
             var userId = Guid.NewGuid();
             var stockListName = "Test Stock List";
-            await db.Users.AddAsync((new User { Id = userId, Username = "Test user" }));
-            await db.SaveChangesAsync();
+            await Db.Users.AddAsync(new User { Id = userId, Username = "Test user" });
+            await Db.SaveChangesAsync();
             await StockListService.CreateStockList(userId, stockListName);
-            var stockList = db.StockLists.FirstOrDefault(s => s.OwnerId == userId && s.Name == stockListName);
+            var stockList = Db.StockLists.FirstOrDefault(s => s.OwnerId == userId && s.Name == stockListName);
 
             // Act
             await StockListService.RemoveUser(stockList.Id, userId, userId);
 
             // Assert
-            var userStockList = db.UserStockLists.FirstOrDefault(us => us.StockListId == stockList.Id && us.UserId == userId);
+            var userStockList = Db.UserStockLists.FirstOrDefault(us => us.StockListId == stockList.Id && us.UserId == userId);
             Assert.IsNotNull(userStockList);
             Assert.IsFalse(userStockList.IsActive);
         }
